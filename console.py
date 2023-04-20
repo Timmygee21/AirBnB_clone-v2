@@ -112,52 +112,57 @@ class HBNBCommand(cmd.Cmd):
     def emptyline(self):
         """ Overrides the emptyline method of CMD """
         pass
-
+    
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
-            print("** class name missing **")
-            return
-        elif args not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        new_instance = HBNBCommand.classes[args]()
-        storage.save()
-        print(new_instance.id)
-        storage.save()
+        '''
+        Creates a new instance of BaseModel, saves it (to the JSON file)
+        '''
 
-    def help_create(self):
-        """ Help information for the create method """
-        print("Creates a class of any type")
-        print("[Usage]: create <className>\n")
-
-    def do_show(self, args):
-        """ Method to show an individual object """
-        new = args.partition(" ")
-        c_name = new[0]
-        c_id = new[2]
-
-        # guard against trailing args
-        if c_id and ' ' in c_id:
-            c_id = c_id.partition(' ')[0]
-
-        if not c_name:
-            print("** class name missing **")
-            return
-
-        if c_name not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-
-        if not c_id:
-            print("** instance id missing **")
-            return
-
-        key = c_name + "." + c_id
         try:
-            print(storage._FileStorage__objects[key])
-        except KeyError:
-            print("** no instance found **")
+            if not args:
+                raise SyntaxError()
+
+            my_list = args.split()
+            obj = eval(f"{my_list[0]}()")
+            obj.save()
+            print(obj.id)
+
+            for word in my_list[1:]:
+                # Replace = with ' '
+                word = word.replace('=', ' ')
+
+                # Split the string into a list
+                attributes = word.split()
+
+                # Replace _ with ' '
+                attributes[0] = attributes[0].replace('_', ' ')
+
+                try:
+                    # Convert the value to the correct type
+                    var = eval(attributes[1])
+                    attributes[1] = var
+                except ValueError as e:
+                    # If value can't be converted, raise ValueError
+                    raise ValueError
+
+                # Set the attribute
+                setattr(obj, attributes[0], attributes[1])
+
+                # Save the object
+                obj.save()
+
+                # Check if attr were added
+                if len(my_list) == 1:
+                    print(obj.id)
+
+        except SyntaxError:
+            print("** class name missing **")
+
+        except NameError:
+            print("** class doesn't exist **")
+
+        except ValueError:
+            print("** value missing **")
 
     def help_show(self):
         """ Help information for the show command """
