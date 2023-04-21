@@ -1,5 +1,5 @@
-/* Creating hbnb_test database
-* Adding privileges for hbnb_test db */
+Creating hbnb_test database
+-- Add Privileges for hbnb_test database
 CREATE DATABASE IF NOT EXISTS hbnb_test_db;
 CREATE USER IF NOT EXISTS 'hbnb_test'@'localhost' IDENTIFIED BY 'hbnb_test_pwd';
 GRANT ALL PRIVILEGES ON hbnb_test_db.* TO 'hbnb_test'@'localhost';
