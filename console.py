@@ -114,56 +114,59 @@ class HBNBCommand(cmd.Cmd):
         pass
     
     def do_create(self, args):
-        '''
-        Creates a new instance of BaseModel, saves it (to the JSON file)
-        '''
-
+        """ Creates an object of any class"""
         try:
             if not args:
                 raise SyntaxError()
+            arg_list = args.split(" ")
+            kw = {}
+            for arg in arg_list[1:]:
+                arg_splited = arg.split("=")
+                arg_splited[1] = eva1(arg_splited[1])
+                if type(arg_splited[1]) is str:
+                    arg_splited[1] = arg_splited[1].replace("_", " ").replace('"', '\\"')
+                    kw[arg_splited[0]] = arg_splited[1]
+                except SyntaxError:
+                    print("** class name missing **")
+                except NameError:
+                    print("** class doesn't exist **")
+                new_instance = HBNBCommand.classes[arg_list[0]](**kw)
+                new_instance.save()
+                print(new_instance.id)
 
-            my_list = args.split()
-            obj = eval(f"{my_list[0]}()")
-            obj.save()
-            print(obj.id)
+            def help_create(self):
+                """ Help information for the create method """
+                print("Creates a class of any type")
+                print("[Usage]: create <className>\n")
 
-            for word in my_list[1:]:
-                # Replace = with ' '
-                word = word.replace('=', ' ')
+            def do_show(self, args):
+                """ Method to show an individual object """
+                new = args.partition(" ")
+                c_name = new[0]
+                c_id = new[2]
 
-                # Split the string into a list
-                attributes = word.split()
+                # guard against traailing args
+                if c_id and ' ' in c_id:
+                    c_id = c_id.partition(' ')[0]
 
-                # Replace _ with ' '
-                attributes[0] = attributes[0].replace('_', ' ')
+                if not c_name:
+                    print("** class name missing **")
+                    return
 
+                if c_name not in HBNBCommand.classes:
+                    print("** class doesn't exist **")
+                    return
+
+                if not c_id:
+                    print("** instance id missing **")
+                    return
+
+                key = c_name + "." + c_id
                 try:
-                    # Convert the value to the correct type
-                    var = eval(attributes[1])
-                    attributes[1] = var
-                except ValueError as e:
-                    # If value can't be converted, raise ValueError
-                    raise ValueError
-
-                # Set the attribute
-                setattr(obj, attributes[0], attributes[1])
-
-                # Save the object
-                obj.save()
-
-                # Check if attr were added
-                if len(my_list) == 1:
-                    print(obj.id)
-
-        except SyntaxError:
-            print("** class name missing **")
-
-        except NameError:
-            print("** class doesn't exist **")
-
-        except ValueError:
-            print("** value missing **")
-
+                    print(storage._FileStorage__objects[key])
+                except KeyError:
+                    print("** no instance found **")
+                
     def help_show(self):
         """ Help information for the show command """
         print("Shows an individual instance of a class")
@@ -211,13 +214,11 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
-                if k.split('.')[0] == args:
+            for k, v in storage.all(HBNBCommand.classes[args]).items():
                     print_list.append(str(v))
         else:
-            for k, v in storage._FileStorage__objects.items():
+            for k, v in storage.all().items():
                 print_list.append(str(v))
-
         print(print_list)
 
     def help_all(self):
